@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>贷款直通车明白纸</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #0d47a1 0%, #1565c0 40%, #1976d2 100%);
+    min-height: 100vh;
+    color: #333;
+  }
+  .header {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    padding: 18px 16px;
+    text-align: center;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
+  .header p { font-size: 12px; opacity: .8; margin-top: 4px; }
+  .breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    padding: 10px 16px; color: rgba(255,255,255,.85); font-size: 13px;
+  }
+  .breadcrumb .crumb { cursor: pointer; }
+  .breadcrumb .crumb:hover { text-decoration: underline; }
+  .breadcrumb .sep { opacity: .5; }
+  .container { max-width: 640px; margin: 0 auto; padding: 8px 14px 60px; }
+
+  .card-list { display: flex; flex-direction: column; gap: 12px; }
+  .card {
+    background: #fff; border-radius: 14px; padding: 18px 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.12);
+    cursor: pointer; transition: transform .12s, box-shadow .12s;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .card:active { transform: scale(.97); }
+  .card .logo {
+    width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px; font-weight: 700;
+  }
+  .card .info { flex: 1; min-width: 0; }
+  .card .name { font-size: 16px; font-weight: 600; }
+  .card .sub { font-size: 12px; color: #888; margin-top: 3px; }
+  .card .arrow { color: #bbb; font-size: 18px; flex-shrink: 0; }
+
+  .detail-card { background: #fff; border-radius: 14px; padding: 22px 18px; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+  .detail-card h2 { font-size: 20px; color: #0d47a1; margin-bottom: 14px; }
+  .detail-card .desc { font-size: 15px; line-height: 1.9; white-space: pre-wrap; color: #444; }
+  .kv { margin-top: 16px; border-top: 1px dashed #e0e0e0; padding-top: 14px; }
+  .kv-row { display: flex; padding: 7px 0; font-size: 14px; }
+  .kv-row .k { width: 90px; color: #888; flex-shrink: 0; }
+  .kv-row .v { flex: 1; color: #333; }
+
+  .empty { text-align: center; color: rgba(255,255,255,.75); padding: 60px 0; font-size: 14px; }
+
+  /* 管理模式 */
+  .admin-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #263238; color: #fff; padding: 10px 14px;
+    display: flex; gap: 8px; justify-content: center; z-index: 50;
+  }
+  .admin-bar button {
+    background: #37474f; color: #fff; border: 1px solid #455a64;
+    padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
+  }
+  .admin-bar button.primary { background: #1565c0; border-color: #1565c0; }
+  .admin-bar button.danger { background: #b71c1c; border-color: #b71c1c; }
+  .edit-btn {
+    background: #ff9800; color: #fff; border: none; border-radius: 8px;
+    font-size: 12px; padding: 5px 10px; cursor: pointer; flex-shrink: 0;
+  }
+  .del-btn {
+    background: #e53935; color: #fff; border: none; border-radius: 8px;
+    font-size: 12px; padding: 5px 10px; cursor: pointer; flex-shrink: 0;
+  }
+  .add-btn {
+    width: 100%; padding: 14px; border: 2px dashed rgba(255,255,255,.5);
+    background: rgba(255,255,255,.08); color: #fff; border-radius: 14px;
+    font-size: 15px; cursor: pointer; margin-top: 12px;
+  }
+
+  /* 弹窗 */
+  .modal-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal {
+    background: #fff; border-radius: 14px; width: 100%; max-width: 480px;
+    max-height: 85vh; overflow-y: auto; padding: 20px;
+  }
+  .modal h3 { font-size: 17px; margin-bottom: 14px; color: #0d47a1; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 13px; color: #666; margin-bottom: 5px; }
+  .field input, .field textarea {
+    width: 100%; border: 1px solid #ddd; border-radius: 8px;
+    padding: 10px; font-size: 15px; font-family: inherit;
+  }
+  .field textarea { min-height: 120px; resize: vertical; line-height: 1.7; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .modal-actions button {
+    flex: 1; padding: 11px; border-radius: 8px; font-size: 15px;
+    border: none; cursor: pointer;
+  }
+  .btn-save { background: #1565c0; color: #fff; }
+  .btn-cancel { background: #eceff1; color: #555; }
+  .hint { font-size: 12px; color: #999; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1 id="pageTitle">贷款直通车明白纸</h1>
+  <p>点击选择银行 → 选择产品 → 查看产品简介</p>
+</div>
+<div class="breadcrumb" id="breadcrumb"></div>
+<div class="container" id="app"></div>
+
+<script>
+/* ================= 默认数据（可在管理模式下修改） ================= */
+const DEFAULT_DATA = {
+  title: "贷款直通车明白纸",
+  banks: [
+    {
+      id: "b1", name: "中国工商银行", short: "工", color: "#c62828",
+      products: [
+        { id: "b1p1", name: "经营快贷", rate: "年化利率低至 3.45% 起", amount: "最高 500 万元", term: "最长 1 年", desc: "面向小微企业主及个体工商户的线上信用贷款。\n\n产品特点：\n1. 纯信用、免抵押，线上申请快速审批；\n2. 按日计息、随借随还，用款灵活；\n3. 贷款资金可用于日常经营周转。\n\n申请条件：\n· 年满 18 周岁，信用记录良好；\n· 持有营业执照并正常经营满 1 年。" },
+        { id: "b1p2", name: "e抵快贷", rate: "年化利率低至 3.6% 起", amount: "最高 1000 万元", term: "最长 10 年", desc: "以住宅、商铺等不动产抵押的经营性贷款。\n\n产品特点：\n1. 额度高、期限长、利率低；\n2. 一次抵押、循环使用；\n3. 支持线上随借随还。\n\n申请条件：\n· 企业或个体工商户正常经营；\n· 抵押物产权清晰、易变现。" }
+      ]
+    },
+    {
+      id: "b2", name: "中国建设银行", short: "建", color: "#1565c0",
+      products: [
+        { id: "b2p1", name: "惠懂你·信用快贷", rate: "年化利率低至 3.5% 起", amount: "最高 300 万元", term: "最长 1 年", desc: "面向小微企业的全流程线上信用贷款。\n\n产品特点：\n1. 手机申请、秒级审批、即时放款；\n2. 信用方式，无需抵押担保；\n3. 随借随还，降低融资成本。\n\n申请条件：\n· 小微企业主、个体工商户；\n· 征信良好、经营稳定。" },
+        { id: "b2p2", name: "抵押快贷", rate: "年化利率低至 3.7% 起", amount: "最高 1000 万元", term: "最长 3 年", desc: "以房产等优质资产抵押的小微企业贷款。\n\n产品特点：\n1. 额度高，满足大额资金周转需求；\n2. 审批快、放款快；\n3. 还款方式灵活多样。" }
+      ]
+    },
+    {
+      id: "b3", name: "中国农业银行", short: "农", color: "#2e7d32",
+      products: [
+        { id: "b3p1", name: "纳税e贷", rate: "年化利率低至 3.45% 起", amount: "最高 300 万元", term: "最长 1 年", desc: "依据企业纳税信用记录发放的线上信用贷款。\n\n产品特点：\n1. 以税定贷、纳税即贷；\n2. 纯线上、免抵押、秒到账；\n3. 按日计息、随借随还。\n\n申请条件：\n· 企业正常纳税满 2 年，纳税信用等级 B 级以上；\n· 企业及法定代表人征信良好。" },
+        { id: "b3p2", name: "惠农e贷", rate: "年化利率低至 3.55% 起", amount: "最高 30 万元", term: "最长 3 年", desc: "面向农户及新型农业经营主体的贷款。\n\n产品特点：\n1. 线上线下结合，村站就近办理；\n2. 支持种养大户、家庭农场、合作社；\n3. 可用于农业生产及经营消费。" }
+      ]
+    },
+    {
+      id: "b4", name: "中国银行", short: "中", color: "#b71c1c",
+      products: [
+        { id: "b4p1", name: "中银企e贷·银税贷", rate: "年化利率低至 3.6% 起", amount: "最高 300 万元", term: "最长 1 年", desc: "基于企业纳税数据的线上信用贷款。\n\n产品特点：\n1. 凭税授信、线上申请；\n2. 无需抵押，审批效率高；\n3. 额度循环、随借随还。\n\n申请条件：\n· 小微企业正常经营、依法纳税；\n· 纳税记录良好，无重大涉税违法。" }
+      ]
+    }
+  ]
+};
+
+/* ================= 数据存取 ================= */
+const KEY = "zhitongche_data_v1";
+function loadData() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+let DATA = loadData();
+function saveData() { localStorage.setItem(KEY, JSON.stringify(DATA)); }
+
+/* ================= 路由（hash 实现四层结构） =================
+   #/                      第二层：银行列表
+   #/bank/<id>             第三层：该银行产品列表
+   #/product/<bid>/<pid>   第四层：产品简介                */
+const adminMode = /[?&]admin=1/.test(location.href) || sessionStorage.getItem("admin") === "1";
+if (adminMode) sessionStorage.setItem("admin", "1");
+
+function parseHash() {
+  const h = location.hash.replace(/^#\/?/, "");
+  const parts = h.split("/").filter(Boolean);
+  if (parts[0] === "bank" && parts[1]) return { page: "products", bankId: parts[1] };
+  if (parts[0] === "product" && parts[1] && parts[2]) return { page: "detail", bankId: parts[1], prodId: parts[2] };
+  return { page: "banks" };
+}
+
+const app = document.getElementById("app");
+const crumb = document.getElementById("breadcrumb");
+const pageTitle = document.getElementById("pageTitle");
+
+function render() {
+  pageTitle.textContent = DATA.title;
+  const r = parseHash();
+  if (r.page === "banks") renderBanks();
+  else if (r.page === "products") renderProducts(r.bankId);
+  else if (r.page === "detail") renderDetail(r.bankId, r.prodId);
+}
+window.addEventListener("hashchange", render);
+
+/* ================= 第二层：银行列表 ================= */
+function renderBanks() {
+  crumb.innerHTML = `<span class="crumb" onclick="location.hash='#/'">首页</span>`;
+  let html = `<div class="card-list">`;
+  DATA.banks.forEach(b => {
+    html += `<div class="card" onclick="location.hash='#/bank/${b.id}'">
+      <div class="logo" style="background:${b.color}">${escapeHtml(b.short)}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(b.name)}</div>
+        <div class="sub">${b.products.length} 个贷款产品 〉</div>
+      </div>
+      <div class="arrow">›</div>
+      ${adminMode ? `<button class="edit-btn" onclick="event.stopPropagation();editBank('${b.id}')">编辑</button>
+      <button class="del-btn" onclick="event.stopPropagation();delBank('${b.id}')">删除</button>` : ""}
+    </div>`;
+  });
+  html += `</div>`;
+  if (adminMode) html += `<button class="add-btn" onclick="editBank(null)">＋ 添加银行</button>`;
+  app.innerHTML = html || `<div class="empty">暂无银行，请进入管理后台添加</div>`;
+}
+
+/* ================= 第三层：产品列表 ================= */
+function renderProducts(bankId) {
+  const bank = DATA.banks.find(b => b.id === bankId);
+  if (!bank) { location.hash = "#/"; return; }
+  crumb.innerHTML = `<span class="crumb" onclick="location.hash='#/'">首页</span>
+    <span class="sep">›</span><span>${escapeHtml(bank.name)}</span>`;
+  let html = `<div class="card-list">`;
+  bank.products.forEach(p => {
+    html += `<div class="card" onclick="location.hash='#/product/${bankId}/${p.id}'">
+      <div class="logo" style="background:${bank.color}">${escapeHtml(p.name.slice(0,1))}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="sub">${escapeHtml(p.rate || "")}</div>
+      </div>
+      <div class="arrow">›</div>
+      ${adminMode ? `<button class="edit-btn" onclick="event.stopPropagation();editProduct('${bankId}','${p.id}')">编辑</button>
+      <button class="del-btn" onclick="event.stopPropagation();delProduct('${bankId}','${p.id}')">删除</button>` : ""}
+    </div>`;
+  });
+  html += `</div>`;
+  if (adminMode) html += `<button class="add-btn" onclick="editProduct('${bankId}',null)">＋ 添加产品</button>`;
+  app.innerHTML = html;
+}
+
+/* ================= 第四层：产品简介 ================= */
+function renderDetail(bankId, prodId) {
+  const bank = DATA.banks.find(b => b.id === bankId);
+  const p = bank && bank.products.find(x => x.id === prodId);
+  if (!p) { location.hash = "#/"; return; }
+  crumb.innerHTML = `<span class="crumb" onclick="location.hash='#/'">首页</span>
+    <span class="sep">›</span><span class="crumb" onclick="location.hash='#/bank/${bankId}'">${escapeHtml(bank.name)}</span>
+    <span class="sep">›</span><span>${escapeHtml(p.name)}</span>`;
+  app.innerHTML = `<div class="detail-card">
+    <h2>${escapeHtml(bank.name)} · ${escapeHtml(p.name)}</h2>
+    <div class="desc">${escapeHtml(p.desc || "暂无简介")}</div>
+    <div class="kv">
+      ${p.rate ? `<div class="kv-row"><div class="k">参考利率</div><div class="v">${escapeHtml(p.rate)}</div></div>` : ""}
+      ${p.amount ? `<div class="kv-row"><div class="k">贷款额度</div><div class="v">${escapeHtml(p.amount)}</div></div>` : ""}
+      ${p.term ? `<div class="kv-row"><div class="k">贷款期限</div><div class="v">${escapeHtml(p.term)}</div></div>` : ""}
+    </div>
+    ${adminMode ? `<div style="margin-top:18px"><button class="edit-btn" style="font-size:14px;padding:8px 16px" onclick="editProduct('${bankId}','${prodId}')">编辑此产品</button></div>` : ""}
+  </div>`;
+}
+
+/* ================= 管理模式：弹窗编辑 ================= */
+function openModal(title, fieldsHtml, onSave) {
+  const mask = document.createElement("div");
+  mask.className = "modal-mask";
+  mask.innerHTML = `<div class="modal"><h3>${title}</h3>${fieldsHtml}
+    <div class="modal-actions">
+      <button class="btn-cancel">取消</button>
+      <button class="btn-save">保存</button>
+    </div></div>`;
+  document.body.appendChild(mask);
+  mask.querySelector(".btn-cancel").onclick = () => mask.remove();
+  mask.querySelector(".btn-save").onclick = () => { if (onSave(mask) !== false) { mask.remove(); render(); } };
+  return mask;
+}
+function field(label, id, val, textarea) {
+  const v = (val === undefined || val === null) ? "" : val;
+  return `<div class="field"><label>${label}</label>${
+    textarea ? `<textarea id="${id}">${escapeHtml(v)}</textarea>` : `<input id="${id}" value="${escapeHtml(v)}">`
+  }</div>`;
+}
+const gv = id => document.getElementById(id).value.trim();
+
+function editBank(id) {
+  const b = id ? DATA.banks.find(x => x.id === id) : { name: "", short: "", color: "#1565c0" };
+  openModal(id ? "编辑银行" : "添加银行",
+    field("银行名称", "f_name", b.name) +
+    field("图标文字（1个字）", "f_short", b.short) +
+    field("主题颜色", "f_color", b.color) +
+    `<div class="hint">如 #c62828、#1565c0，可填色值或颜色名</div>`,
+    () => {
+      const name = gv("f_name"); if (!name) { alert("请填写银行名称"); return false; }
+      if (id) { b.name = name; b.short = gv("f_short") || name[0]; b.color = gv("f_color") || "#1565c0"; }
+      else DATA.banks.push({ id: "b" + Date.now(), name, short: gv("f_short") || name[0], color: gv("f_color") || "#1565c0", products: [] });
+      saveData();
+    });
+}
+
+function delBank(id) {
+  if (!confirm("确定删除该银行及其全部产品？")) return;
+  DATA.banks = DATA.banks.filter(b => b.id !== id);
+  saveData(); render();
+}
+
+function editProduct(bankId, id) {
+  const bank = DATA.banks.find(b => b.id === bankId);
+  const p = id ? bank.products.find(x => x.id === id) : { name: "", rate: "", amount: "", term: "", desc: "" };
+  openModal(id ? "编辑产品" : "添加产品",
+    field("产品名称", "f_name", p.name) +
+    field("参考利率", "f_rate", p.rate) +
+    field("贷款额度", "f_amount", p.amount) +
+    field("贷款期限", "f_term", p.term) +
+    field("产品介绍（支持换行）", "f_desc", p.desc, true),
+    () => {
+      const name = gv("f_name"); if (!name) { alert("请填写产品名称"); return false; }
+      const obj = { name, rate: gv("f_rate"), amount: gv("f_amount"), term: gv("f_term"), desc: gv("f_desc") };
+      if (id) Object.assign(p, obj);
+      else bank.products.push(Object.assign({ id: "p" + Date.now() }, obj));
+      saveData();
+    });
+}
+
+function delProduct(bankId, id) {
+  if (!confirm("确定删除该产品？")) return;
+  const bank = DATA.banks.find(b => b.id === bankId);
+  bank.products = bank.products.filter(p => p.id !== id);
+  saveData(); render();
+}
+
+function editTitle() {
+  openModal("修改页面标题", field("标题", "f_t", DATA.title), () => {
+    const t = gv("f_t"); if (!t) return false;
+    DATA.title = t; saveData();
+  });
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "直通车明白纸配置.json";
+  a.click();
+}
+
+function importData() {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = ".json";
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const d = JSON.parse(r.result);
+        if (!d.banks || !Array.isArray(d.banks)) throw 0;
+        DATA = d; saveData(); render(); alert("导入成功");
+      } catch (e) { alert("文件格式不正确"); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+
+function resetData() {
+  if (!confirm("确定恢复默认演示数据？当前修改将全部丢失！")) return;
+  localStorage.removeItem(KEY);
+  DATA = loadData(); render();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* 管理工具栏 */
+if (adminMode) {
+  const bar = document.createElement("div");
+  bar.className = "admin-bar";
+  bar.innerHTML = `
+    <button onclick="editTitle()">改标题</button>
+    <button onclick="exportData()">导出配置</button>
+    <button onclick="importData()">导入配置</button>
+    <button class="danger" onclick="resetData()">恢复默认</button>
+    <button class="primary" onclick="sessionStorage.removeItem('admin');location.href=location.pathname">退出管理</button>`;
+  document.body.appendChild(bar);
+  document.body.style.paddingBottom = "60px";
+}
+
+render();
+</script>
+</body>
+</html>
